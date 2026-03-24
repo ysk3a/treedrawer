@@ -57,7 +57,9 @@ export class DrawerBasicDemo {
   }
 
   handleVisibilityChange(isVisible: boolean, index: number) {
+    console.log('::handleVisibilityChange', index, isVisible);
     this.activePath.update(path => {
+      if (index >= path.length) return path;
       const newPath = [...path];
       // Replace the object reference to trigger the computed signal
       newPath[index] = { ...newPath[index], visible: isVisible };
@@ -67,10 +69,15 @@ export class DrawerBasicDemo {
 
   finalizeClose(index: number) {
     this.activePath.update(path => {
-      if (index >= 0) {
-        // Return a brand new array reference [...] to trigger Signal updates
-        return [...path.slice(0, index)];
+      // If we are closing the first drawer (index 0) or any drawer at the top
+      if (index === 0) {
+        return []; // Reset the entire stack to empty
       }
+
+      if (index === path.length - 1) {
+        return [...path.slice(0, -1)]; // Standard pop for sequential drawers
+      }
+
       return path;
     });
   }
