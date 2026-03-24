@@ -28,7 +28,7 @@ interface NavNode {
   templateUrl: 'drawer-basic-demo.html',
   standalone: true,
   imports: [
-    CommonModule, ss
+    CommonModule,
     ThemeSwitcher,
     ButtonModule,
     DrawerModule,
