@@ -1,32 +1,41 @@
 <theme-switcher />
 
 <!-- Trigger to start -->
-<p-button
-  label="Open Root"
-  (click)="openNext({id: '1', label: 'Main'})"
-></p-button>
-
-@for (node of activePath(); track node.id; let i = $index) {
-<p-drawer
-  [(visible)]="node.visible"
-  (onHide)="finalizeClose(i)"
-  [header]="node.label"
-  position="right"
->
-  <ng-template pTemplate="content">
-    <!-- Logic to open the next drawer -->
-    <!-- Clicking this triggers the NEXT drawer in the stack -->
-    {{ node.id }} - {{ i }}
-    <div class="p-3">
-      <p-button
-        label="Next"
-        (click)="openNext({id: +node.id+1, label: 'Child of ' + node.label})"
-      ></p-button>
-      Open Next Level
-    </div>
-
-    <!-- 'Back' button only triggers the animation, not the array slice -->
-    <p-button label="Back" (click)="node.visible = false"></p-button>
-  </ng-template>
-</p-drawer>
+@if (activePath().length == 0) {
+<p-button label="Open Root" (click)="openNext({id: '1', label: 'Main'})"></p-button>
 }
+
+{{ activePath().length }}
+
+<!-- Custom Header with Breadcrumb -->
+<div class="flex flex-column gap-2 w-full">
+  <p-breadcrumb [model]="breadcrumbItems()" class="border-none bg-transparent p-0"></p-breadcrumb>
+</div>
+
+<div #mydiv class="container">
+  @for (node of activePath(); track node.id; let i = $index) {
+  <p-drawer
+    [style]="{position: 'absolute', top: '0', height: '100%', width: '100%', 'z-index': '10'}"
+    [appendTo]="mydiv"
+    [visible]="node.visible"
+    (visibleChange)="handleVisibilityChange($event, i)"
+    (onHide)="finalizeClose(i)"
+    [closable]="true"
+    [modal]="false"
+    [header]="node.label"
+    position="right">
+    <ng-template pTemplate="content">
+      <!-- Logic to open the next drawer -->
+      <!-- Clicking this triggers the NEXT drawer in the stack -->
+      {{ node.id }} - {{ i }}
+      <div class="p-3">
+        <p-button label="Next" (click)="openNext({id: +node.id+1, label: 'Child of ' + node.label})"></p-button>
+        Open Next Level
+      </div>
+
+      <!-- 'Back' button only triggers the animation, not the array slice -->
+      <p-button label="Back" (click)="node.visible = false; finalizeClose(i)"></p-button>
+    </ng-template>
+  </p-drawer>
+  }
+</div>
