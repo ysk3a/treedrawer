@@ -19,9 +19,17 @@ interface NavNode {
   id: string;
   label: string;
   children?: NavNode[]; // The "N" amount of siblings/options
+  path?: string; // e.g., "root", "root/settings", "root/settings/privacy"
   data?: any;
   visible?: boolean; // Required for animation control
 }
+
+const flatNodes: NavNode[] = [
+  { id: '1', label: 'Main', path: 'root' },
+  { id: '2', label: 'Settings', path: 'root/settings' },
+  { id: '4', label: 'Settings2', path: 'root/settings2' },
+  { id: '3', label: 'Privacy', path: 'root/settings/privacy' }
+];
 
 @Component({
   selector: 'drawer-basic-demo',
@@ -43,17 +51,62 @@ export class DrawerBasicDemo {
 
   activePath = signal<readonly NavNode[]>([]);
   breadcrumbItems = computed<MenuItem[]>(() => {
-    const currentPath = this.activePath().filter(node => node.visible !== false);
-    return this.activePath()
-      .map((node, index) => ({
-        label: node.label,
-        disabled: index === currentPath.length - 1,
-        command: () => this.finalizeClose(index + 1)
-      }));
+    const currentStack = this.activePath().filter(n => n.visible !== false);
+
+    return currentStack.map((node, index) => ({
+      label: node.label,
+      disabled: index === currentStack.length - 1,
+      command: () => this.finalizeClose(index + 1)
+    }));
   });
 
-  openNext(nodeData: any) {
+  rootStart() {
+    this.openNext({
+      id: '1',
+      label: 'A',
+      path: 'root',
+      children: [
+        {
+          id: '2',
+          label: 'B',
+          children: [
+            {
+              id: '4',
+              label: 'B1',
+            },
+            {
+              id: '5',
+              label: 'B2',
+            }
+          ]
+        },
+        {
+          id: '3',
+          label: 'C',
+          children: [
+            {
+              id: '6',
+              label: 'C1',
+            },
+            {
+              id: '7',
+              label: 'C2',
+            }
+          ]
+        }
+      ]
+    })
+  }
+
+
+  openNext(nodeData: NavNode) {
+    // // 1. Find the "siblings" (children) of the selected node
+    // const children = flatNodes.filter(n => n.path.startsWith(`${selectedNode.path}/`));
+
+    // // 2. Add the selected node to the stack
+    // this.activePath.update(stack => [...stack, { ...selectedNode, visible: true, children }]);
     this.activePath.update((path) => [...path, { ...nodeData, visible: true }]);
+
   }
 
   handleVisibilityChange(isVisible: boolean, index: number) {
@@ -69,16 +122,11 @@ export class DrawerBasicDemo {
 
   finalizeClose(index: number) {
     this.activePath.update(path => {
-      // If we are closing the first drawer (index 0) or any drawer at the top
-      if (index === 0) {
-        return []; // Reset the entire stack to empty
-      }
+      // If we close the very first drawer (index 0), clear everything.
+      if (index === 0) return [];
 
-      if (index === path.length - 1) {
-        return [...path.slice(0, -1)]; // Standard pop for sequential drawers
-      }
-
-      return path;
+      // Otherwise, only slice if it's the top drawer finishing its animation.
+      return index === path.length - 1 ? [...path.slice(0, -1)] : path;
     });
   }
 }
