@@ -43,10 +43,12 @@ export class DrawerBasicDemo {
 
   activePath = signal<readonly NavNode[]>([]);
   breadcrumbItems = computed<MenuItem[]>(() => {
+    const currentPath = this.activePath().filter(node => node.visible !== false);
     return this.activePath()
       .map((node, index) => ({
         label: node.label,
-        command: () => this.finalizeClose(index)
+        disabled: index === currentPath.length - 1,
+        command: () => this.finalizeClose(index + 1)
       }));
   });
 
